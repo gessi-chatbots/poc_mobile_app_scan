@@ -82,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
             data.createNewFile();
             Writer writer = new FileWriter(data);
             writer.write(array.toString());
+            writer.close();
         } catch (IOException e) {
             e.printStackTrace();
             displayExceptionMessage(e.getMessage());
