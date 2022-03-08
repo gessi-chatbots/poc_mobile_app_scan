@@ -6,7 +6,6 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.JsonWriter;
 import android.view.View;
 import android.widget.Toast;
 
@@ -16,6 +15,7 @@ import androidx.core.app.ActivityCompat;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -40,19 +40,27 @@ public class MainActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.R)
     public void scanApps(View view) {
         verifyPermissions();
-        String[] idList = getInstalledAppsPackageNames();
-        printAsJSONtoFile(idList);
+        JSONArray appInfo = getInstalledAppsPackageNames();
+        printAsJSONtoFile(appInfo);
     }
 
-    private String[] getInstalledAppsPackageNames() {
+    private JSONArray getInstalledAppsPackageNames() {
         @SuppressLint("QueryPermissionsNeeded") List<ApplicationInfo> listInstalledApps = getPackageManager().getInstalledApplications(PackageManager.GET_META_DATA);
-        String[] list = new String[listInstalledApps.size()];
-        int i = 0;
+        JSONArray apps = new JSONArray();
         for (ApplicationInfo appInfo : listInstalledApps) {
-            list[i] = appInfo.packageName;
-            ++i;
+            String packageName = appInfo.packageName;
+            String appName = (String) getPackageManager().getApplicationLabel(appInfo);
+            JSONObject individualApp = new JSONObject();
+            try {
+                individualApp.accumulate("app_name", appName);
+                individualApp.accumulate("package_name", packageName);
+            }
+            catch (JSONException e) {
+                e.printStackTrace();
+            }
+            apps.put(individualApp);
         }
-        return list;
+        return apps;
     }
 
     private void verifyPermissions() {
@@ -68,18 +76,12 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
 
-    private void printAsJSONtoFile(String[] array) {
+    private void printAsJSONtoFile(JSONArray array) {
         try {
             File data = new File(getDataDir(),"installedAppsPackageNames.json");
             data.createNewFile();
             Writer writer = new FileWriter(data);
-            JsonWriter jsonWriter = new JsonWriter(writer);
-            jsonWriter.beginArray();
-            for (String packageName : array) {
-                jsonWriter.value(packageName);
-            }
-            jsonWriter.endArray();
-            jsonWriter.close();
+            writer.write(array.toString());
         } catch (IOException e) {
             e.printStackTrace();
             displayExceptionMessage(e.getMessage());
