@@ -88,10 +88,4 @@ public class MainActivity extends AppCompatActivity {
             displayExceptionMessage(e.getMessage());
         }
     }
-
-    public JSONArray generateJSONArray(String[] idList) throws JSONException {
-        return new JSONArray(idList);
-    }
-
-
 }
