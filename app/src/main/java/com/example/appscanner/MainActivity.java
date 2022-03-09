@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.List;
 
 @RequiresApi(api = Build.VERSION_CODES.R)
@@ -46,8 +47,9 @@ public class MainActivity extends AppCompatActivity {
 
     private JSONArray getInstalledAppsPackageNames() {
         @SuppressLint("QueryPermissionsNeeded") List<ApplicationInfo> listInstalledApps = getPackageManager().getInstalledApplications(PackageManager.GET_META_DATA);
+        List<ApplicationInfo> listWithoutSystemApps = removeSystemApps(listInstalledApps);
         JSONArray apps = new JSONArray();
-        for (ApplicationInfo appInfo : listInstalledApps) {
+        for (ApplicationInfo appInfo : listWithoutSystemApps) {
             String packageName = appInfo.packageName;
             String appName = (String) getPackageManager().getApplicationLabel(appInfo);
             JSONObject individualApp = new JSONObject();
@@ -61,6 +63,16 @@ public class MainActivity extends AppCompatActivity {
             apps.put(individualApp);
         }
         return apps;
+    }
+
+    private List<ApplicationInfo> removeSystemApps(List<ApplicationInfo> listInstalledApps) {
+        List<ApplicationInfo> userInstalledApps = new ArrayList<>();
+        for (ApplicationInfo app : listInstalledApps) {
+            if ((app.flags & ApplicationInfo.FLAG_SYSTEM) != 1) {
+                userInstalledApps.add(app);
+            }
+        }
+        return userInstalledApps;
     }
 
     private void verifyPermissions() {
